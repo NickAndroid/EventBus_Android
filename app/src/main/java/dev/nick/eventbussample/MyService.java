@@ -20,11 +20,13 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import dev.nick.eventbus.Event;
 import dev.nick.eventbus.EventBus;
+import dev.nick.eventbus.EventReceiver;
 import dev.nick.eventbus.annotation.Events;
 import dev.nick.eventbus.annotation.ReceiverMethod;
 
@@ -46,6 +48,7 @@ public class MyService extends Service {
         super.onCreate();
         log("Service started.");
         EventBus.getInstance().subscribe(this);
+        customReceiver();
     }
 
     @Events(Constants.EVENT_FAB_CLICKED)
@@ -78,5 +81,24 @@ public class MyService extends Service {
         Event event = new Event(Constants.EVENT_LOG, data);
 
         EventBus.getInstance().publish(event);
+    }
+
+    void customReceiver() {
+        EventBus.getInstance().subscribe(new EventReceiver() {
+            @Override
+            public void onReceive(@NonNull Event event) {
+                log("onReceive:" + event);
+            }
+
+            @Override
+            public int[] events() {
+                return new int[]{Constants.EVENT_FAB_CLICKED};
+            }
+
+            @Override
+            public boolean callInMainThread() {
+                return false;
+            }
+        });
     }
 }

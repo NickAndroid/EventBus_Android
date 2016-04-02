@@ -40,7 +40,7 @@ public class EventBus {
 
     private static final String LOG_TAG = "EventBus";
 
-    private boolean mDebugable;
+    private boolean mDebuggable;
 
     @RetrieveBean
     private PublisherService mService;
@@ -70,7 +70,7 @@ public class EventBus {
 
     public synchronized static void create(@NonNull Application application, boolean debug) {
         if (sBus == null) sBus = new EventBus(Preconditions.checkNotNull(application));
-        sBus.mDebugable = debug;
+        sBus.mDebuggable = debug;
     }
 
     public static EventBus getInstance() {
@@ -87,8 +87,8 @@ public class EventBus {
         });
     }
 
-    public void publishEmpty(final int... events) {
-        log("publishEmpty:" + Arrays.toString(events));
+    public void publishEmptyEvent(final int... events) {
+        log("publishEmptyEvent:" + Arrays.toString(events));
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -109,7 +109,7 @@ public class EventBus {
         });
     }
 
-    public void subscribe(final Object object) {
+    public void subscribe(@NonNull final Object object) {
         log("subscribe:" + object);
         mHandler.post(new Runnable() {
             @Override
@@ -120,6 +120,6 @@ public class EventBus {
     }
 
     private void log(Object message) {
-        if (mDebugable) Log.d(LOG_TAG, String.valueOf(message));
+        if (mDebuggable) Log.d(LOG_TAG, String.valueOf(message));
     }
 }
