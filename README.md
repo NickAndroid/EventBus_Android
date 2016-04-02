@@ -3,7 +3,12 @@
 # EventBus
 Simple event bus for Android
 
+### Latest version
+[ ![Download](https://api.bintray.com/packages/nickandroid/maven/eventbus/images/download.svg) ](https://bintray.com/nickandroid/maven/eventbus/_latestVersion)
+
 ### Samples
+
+Config
 ``` java
 public class MyApp extends Application {
 
@@ -15,6 +20,7 @@ public class MyApp extends Application {
 }
 ```
 
+Activity
 ``` java
 public class MainActivity extends AppCompatActivity {
 
@@ -53,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     }
 ```
 
+Service
 ``` java
 @Events(Constants.EVENT_ACTIVITY_FINISHED)
 public class MyService extends Service {
@@ -100,6 +107,40 @@ public class MyService extends Service {
         Event event = new Event(Constants.EVENT_LOG, data);
 
         EventBus.getInstance().publish(event);
+    }
+}
+```
+
+Remote call
+``` java
+
+public class EventBusServiceSample extends EventBusService {
+}
+```
+``` java
+public class Binding {
+    IEventBus mBus;
+
+    public Binding(IEventBus bus) {
+        this.mBus = bus;
+    }
+
+    void bind() {
+        try {
+            mBus.subscribe(new IEventReceiver.Stub() {
+                @Override
+                public void onReceive(Event event) throws RemoteException {
+                    Log.d("EventBus.Binding", "onReceive:" + event);
+                }
+
+                @Override
+                public int[] events() throws RemoteException {
+                    return new int[]{Constants.EVENT_FAB_CLICKED};
+                }
+            });
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 }
 ```
