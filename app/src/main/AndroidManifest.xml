@@ -18,7 +18,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <service android:name=".MyService" />
+        <service android:name=".EventBusServiceSample">
+            <intent-filter>
+                <action android:name="bind.eventbus" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

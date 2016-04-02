@@ -27,6 +27,7 @@ import android.util.Log;
 import dev.nick.eventbus.Event;
 import dev.nick.eventbus.EventBus;
 import dev.nick.eventbus.EventReceiver;
+import dev.nick.eventbus.annotation.CallInMainThread;
 import dev.nick.eventbus.annotation.Events;
 import dev.nick.eventbus.annotation.ReceiverMethod;
 
@@ -69,6 +70,7 @@ public class MyService extends Service {
 
     @ReceiverMethod
     @Events({Constants.EVENT_ACTIVITY_FINISHED})
+    @CallInMainThread
     public void customName() {
         log("customName");
         stopSelf();

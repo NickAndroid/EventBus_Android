@@ -99,6 +99,10 @@ public class EventBus {
     }
 
     public void subscribe(@NonNull final EventReceiver receiver) {
+        subscribeBinder(receiver);
+    }
+
+    private void subscribeBinder(@NonNull final IEventReceiver receiver) {
         log("subscribe:" + receiver);
         mHandler.post(new Runnable() {
             @Override
@@ -157,7 +161,7 @@ public class EventBus {
 
             @Override
             public void subscribe(IEventReceiver receiver) throws RemoteException {
-                EventBus.this.subscribe(receiver);
+                EventBus.this.subscribeBinder(receiver);
             }
 
             @Override

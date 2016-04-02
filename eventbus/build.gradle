@@ -6,7 +6,7 @@ def siteUrl = 'http://nickandroid.github.io/EventBus/'    // project homepage
 def gitUrl = 'https://github.com/NickAndroid/EventBus.git' // project git
 
 group = "dev.nick"
-version = "0.1"
+version = "0.2"
 
 android {
     compileSdkVersion 23
@@ -92,7 +92,7 @@ bintray {
     configurations = ['archives']
     pkg {
         repo = "maven"
-        name = "scalpel"
+        name = "eventbus"
         // #CONFIG# project name in jcenter
         websiteUrl = siteUrl
         vcsUrl = gitUrl

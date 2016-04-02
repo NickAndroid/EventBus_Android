@@ -19,12 +19,13 @@ package dev.nick.eventbus.internal;
 import android.support.annotation.NonNull;
 
 import dev.nick.eventbus.EventReceiver;
+import dev.nick.eventbus.IEventReceiver;
 
 /**
  * Created by nick on 16-4-1.
  * Email: nick.guo.dev@icloud.com
  */
 public interface Subscriber {
-    void subscribe(@NonNull EventReceiver receiver);
-    void unSubscribe(@NonNull EventReceiver receiver);
+    void subscribe(@NonNull IEventReceiver receiver);
+    void unSubscribe(@NonNull IEventReceiver receiver);
 }

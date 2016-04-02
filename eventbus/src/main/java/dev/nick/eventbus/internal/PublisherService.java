@@ -29,6 +29,7 @@ import java.util.Map;
 
 import dev.nick.eventbus.Event;
 import dev.nick.eventbus.EventReceiver;
+import dev.nick.eventbus.IEventReceiver;
 
 /**
  * Created by nick on 16-4-1.
@@ -49,22 +50,37 @@ public class PublisherService implements Publisher, Subscriber {
     public void publish(@NonNull final Event event) {
         synchronized (mEventReceivers) {
             for (final EventReceiverClient receiverClient : mEventReceivers.values()) {
-                final EventReceiver receiver = receiverClient.receiver;
-                int[] events = receiver.events();
+                final IEventReceiver receiver = receiverClient.receiver;
+                boolean callInMainThread = receiver instanceof EventReceiver
+                        && ((EventReceiver) receiver).callInMainThread();
+                int[] events;
+                try {
+                    events = receiver.events();
+                } catch (RemoteException e) {
+                    continue;
+                }
                 for (int e : events) {
                     if (e == event.getEventType()) {
-                        if (receiver.callInMainThread())
+                        if (callInMainThread)
                             runOnMainThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    receiver.onReceive(Event.fromClone(event));
+                                    try {
+                                        receiver.onReceive(Event.fromClone(event));
+                                    } catch (RemoteException ignored) {
+
+                                    }
                                 }
                             });
                         else
                             runOnWorkerThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    receiver.onReceive(Event.fromClone(event));
+                                    try {
+                                        receiver.onReceive(Event.fromClone(event));
+                                    } catch (RemoteException ignored) {
+
+                                    }
                                 }
                             });
                         break;
@@ -83,7 +99,7 @@ public class PublisherService implements Publisher, Subscriber {
     }
 
     @Override
-    public void subscribe(@NonNull final EventReceiver receiver) {
+    public void subscribe(@NonNull final IEventReceiver receiver) {
         synchronized (mEventReceivers) {
             if (!mEventReceivers.containsKey(receiver.asBinder())) {
                 EventReceiverClient client = new EventReceiverClient(receiver);
@@ -93,7 +109,7 @@ public class PublisherService implements Publisher, Subscriber {
     }
 
     @Override
-    public void unSubscribe(@NonNull EventReceiver receiver) {
+    public void unSubscribe(@NonNull IEventReceiver receiver) {
         synchronized (mEventReceivers) {
             EventReceiverClient client = mEventReceivers.remove(receiver.asBinder());
             if (client != null) client.unLinkToDeath();
@@ -102,9 +118,9 @@ public class PublisherService implements Publisher, Subscriber {
 
     class EventReceiverClient implements IBinder.DeathRecipient {
 
-        EventReceiver receiver;
+        IEventReceiver receiver;
 
-        public EventReceiverClient(EventReceiver receiver) {
+        public EventReceiverClient(IEventReceiver receiver) {
             this.receiver = receiver;
             try {
                 receiver.asBinder().linkToDeath(this, 0);

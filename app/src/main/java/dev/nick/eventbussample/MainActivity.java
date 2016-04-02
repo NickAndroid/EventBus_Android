@@ -16,20 +16,29 @@
 
 package dev.nick.eventbussample;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.nick.scalpel.ScalpelAutoActivity;
+import com.nick.scalpel.annotation.binding.BindService;
+
 import dev.nick.eventbus.Event;
 import dev.nick.eventbus.EventBus;
+import dev.nick.eventbus.IEventBus;
 import dev.nick.eventbus.annotation.CallInMainThread;
 import dev.nick.eventbus.annotation.Events;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends ScalpelAutoActivity implements BindService.Callback {
+
+    @BindService(action = "bind.eventbus", pkg = "dev.nick.eventbussample", autoUnbind = true, callback = "this")
+    IEventBus mBus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,5 +72,16 @@ public class MainActivity extends AppCompatActivity {
     public void handleLog(Event event) {
         TextView textView = (TextView) findViewById(R.id.textView);
         textView.setText(event.getData().getString("data"));
+    }
+
+    @Override
+    public void onServiceBound(ComponentName name, ServiceConnection connection, Intent intent) {
+        Log.d("EventBus", "onServiceBound");
+        new Binding(mBus).bind();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+
     }
 }

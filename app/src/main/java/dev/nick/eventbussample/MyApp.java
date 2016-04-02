@@ -18,6 +18,9 @@ package dev.nick.eventbussample;
 
 import android.app.Application;
 
+import com.nick.scalpel.Scalpel;
+import com.nick.scalpel.config.Configuration;
+
 import dev.nick.eventbus.EventBus;
 
 /**
@@ -29,6 +32,10 @@ public class MyApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Scalpel.create(this).config(Configuration.builder()
+                .debug(true)
+                .logTag("EventBus")
+                .build());
         EventBus.create(this).setDebuggable(true);
     }
 }
