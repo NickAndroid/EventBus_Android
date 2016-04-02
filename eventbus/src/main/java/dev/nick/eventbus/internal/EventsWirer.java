@@ -25,6 +25,9 @@ import com.nick.scalpel.core.utils.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import dev.nick.eventbus.Event;
 import dev.nick.eventbus.EventReceiver;
@@ -39,10 +42,12 @@ import dev.nick.eventbus.annotation.ReceiverMethod;
 public class EventsWirer extends AbsClassWirer {
 
     private Subscriber mSubscriber;
+    private final List<TaggedEventsReceiver> mReceivers;
 
     public EventsWirer(Configuration configuration, Subscriber subscriber) {
         super(configuration);
         this.mSubscriber = subscriber;
+        this.mReceivers = new ArrayList<>();
     }
 
     @Override
@@ -88,7 +93,7 @@ public class EventsWirer extends AbsClassWirer {
 
             final boolean callInMain = m.isAnnotationPresent(CallInMainThread.class);
 
-            EventReceiver receiver = new SimpleEventsReceiver(usingEvents, methodName) {
+            TaggedEventsReceiver receiver = new TaggedEventsReceiver(usingEvents, o, methodName) {
                 @Override
                 public void onReceive(@NonNull Event event) {
                     logV("Invoking for event:" + event);
@@ -106,7 +111,34 @@ public class EventsWirer extends AbsClassWirer {
             logV("Creating receiver:" + receiver);
 
             mSubscriber.subscribe(receiver);
+            saveReceiver(receiver);
         }
+    }
+
+    public void unWire(Object o) {
+        List<EventReceiver> receivers = findReceiversByTag(o);
+        for (EventReceiver receiver : receivers) {
+            logD("unWiring receiver:" + receiver);
+            mSubscriber.unSubscribe(receiver);
+        }
+    }
+
+    void saveReceiver(TaggedEventsReceiver receiver) {
+        synchronized (mReceivers) {
+            mReceivers.add(receiver);
+        }
+    }
+
+    List<EventReceiver> findReceiversByTag(Object tag) {
+        List<EventReceiver> outs = new ArrayList<>();
+        synchronized (mReceivers) {
+            for (TaggedEventsReceiver receiver : mReceivers) {
+                if (receiver.from == tag) {
+                    outs.add(receiver);
+                }
+            }
+        }
+        return outs;
     }
 
     @Override
@@ -114,14 +146,16 @@ public class EventsWirer extends AbsClassWirer {
         return Events.class;
     }
 
-    abstract class SimpleEventsReceiver implements EventReceiver {
+    abstract class TaggedEventsReceiver extends EventReceiver {
 
         int[] events;
+        Object from;
         // For debug.
         String methodName;
 
-        public SimpleEventsReceiver(int[] events, String methodName) {
+        public TaggedEventsReceiver(int[] events, Object from, String methodName) {
             this.events = events;
+            this.from = from;
             this.methodName = methodName;
         }
 
@@ -131,9 +165,30 @@ public class EventsWirer extends AbsClassWirer {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TaggedEventsReceiver that = (TaggedEventsReceiver) o;
+
+            if (!Arrays.equals(events, that.events)) return false;
+            if (!from.equals(that.from)) return false;
+            return methodName.equals(that.methodName);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Arrays.hashCode(events);
+            result = 31 * result + from.hashCode();
+            result = 31 * result + methodName.hashCode();
+            return result;
+        }
+
+        @Override
         public String toString() {
-            return "SimpleEventsReceiver{" +
-                    "events=" + events +
+            return "TaggedEventsReceiver{" +
+                    "events=" + Arrays.toString(events) +
+                    ", from=" + from +
                     ", methodName='" + methodName + '\'' +
                     '}';
         }

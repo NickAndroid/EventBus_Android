@@ -26,4 +26,5 @@ import dev.nick.eventbus.EventReceiver;
  */
 public interface Subscriber {
     void subscribe(@NonNull EventReceiver receiver);
+    void unSubscribe(@NonNull EventReceiver receiver);
 }

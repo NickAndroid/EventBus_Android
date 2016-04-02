@@ -29,6 +29,6 @@ public class MyApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        EventBus.create(this, true);
+        EventBus.create(this).setDebuggable(true);
     }
 }

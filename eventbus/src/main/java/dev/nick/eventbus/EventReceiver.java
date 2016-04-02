@@ -22,10 +22,13 @@ import android.support.annotation.NonNull;
  * Created by nick on 16-4-1.
  * Email: nick.guo.dev@icloud.com
  */
-public interface EventReceiver {
-    void onReceive(@NonNull Event event);
+public abstract class EventReceiver extends IEventReceiver.Stub {
 
-    int[] events();
+    public abstract void onReceive(@NonNull Event event);
 
-    boolean callInMainThread();
+    public abstract int[] events();
+
+    public boolean callInMainThread() {
+        return false;
+    }
 }

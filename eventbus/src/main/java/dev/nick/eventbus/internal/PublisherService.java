@@ -17,13 +17,15 @@
 package dev.nick.eventbus.internal;
 
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 
 import com.nick.scalpel.core.opt.SharedExecutor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import dev.nick.eventbus.Event;
 import dev.nick.eventbus.EventReceiver;
@@ -34,19 +36,20 @@ import dev.nick.eventbus.EventReceiver;
  */
 public class PublisherService implements Publisher, Subscriber {
 
-    private final List<EventReceiver> mEventReceivers;
+    private final Map<IBinder, EventReceiverClient> mEventReceivers;
 
     private Handler mMainHandler;
 
     PublisherService() {
-        mEventReceivers = new ArrayList<>();
+        mEventReceivers = new HashMap<>();
         mMainHandler = new Handler(Looper.getMainLooper());
     }
 
     @Override
     public void publish(@NonNull final Event event) {
         synchronized (mEventReceivers) {
-            for (final EventReceiver receiver : mEventReceivers) {
+            for (final EventReceiverClient receiverClient : mEventReceivers.values()) {
+                final EventReceiver receiver = receiverClient.receiver;
                 int[] events = receiver.events();
                 for (int e : events) {
                     if (e == event.getEventType()) {
@@ -80,9 +83,43 @@ public class PublisherService implements Publisher, Subscriber {
     }
 
     @Override
-    public void subscribe(@NonNull EventReceiver receiver) {
+    public void subscribe(@NonNull final EventReceiver receiver) {
         synchronized (mEventReceivers) {
-            if (!mEventReceivers.contains(receiver)) mEventReceivers.add(receiver);
+            if (!mEventReceivers.containsKey(receiver.asBinder())) {
+                EventReceiverClient client = new EventReceiverClient(receiver);
+                mEventReceivers.put(receiver.asBinder(), client);
+            }
+        }
+    }
+
+    @Override
+    public void unSubscribe(@NonNull EventReceiver receiver) {
+        synchronized (mEventReceivers) {
+            EventReceiverClient client = mEventReceivers.remove(receiver.asBinder());
+            if (client != null) client.unLinkToDeath();
+        }
+    }
+
+    class EventReceiverClient implements IBinder.DeathRecipient {
+
+        EventReceiver receiver;
+
+        public EventReceiverClient(EventReceiver receiver) {
+            this.receiver = receiver;
+            try {
+                receiver.asBinder().linkToDeath(this, 0);
+            } catch (RemoteException ignored) {
+
+            }
+        }
+
+        @Override
+        public void binderDied() {
+            unSubscribe(receiver);
+        }
+
+        void unLinkToDeath() {
+            receiver.asBinder().unlinkToDeath(this, 0);
         }
     }
 }

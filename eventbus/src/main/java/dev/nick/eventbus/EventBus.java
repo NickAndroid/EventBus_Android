@@ -18,6 +18,8 @@ package dev.nick.eventbus;
 
 import android.app.Application;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -40,7 +42,7 @@ public class EventBus {
 
     private static final String LOG_TAG = "EventBus";
 
-    private boolean mDebuggable;
+    private Config mConfig;
 
     @RetrieveBean
     private PublisherService mService;
@@ -53,6 +55,7 @@ public class EventBus {
     private static EventBus sBus;
 
     private EventBus(Application application) {
+        mConfig = new Config();
         Scalpel scalpel = Scalpel.getInstance();
         if (scalpel == null) scalpel = Scalpel.create(application).config(Configuration.builder()
                 .debug(true)
@@ -64,13 +67,9 @@ public class EventBus {
         log("Event bus created!");
     }
 
-    public synchronized static void create(@NonNull Application application) {
-        create(application, false);
-    }
-
-    public synchronized static void create(@NonNull Application application, boolean debug) {
+    public synchronized static Config create(@NonNull Application application) {
         if (sBus == null) sBus = new EventBus(Preconditions.checkNotNull(application));
-        sBus.mDebuggable = debug;
+        return sBus.mConfig;
     }
 
     public static EventBus getInstance() {
@@ -119,7 +118,60 @@ public class EventBus {
         });
     }
 
+    public void unSubscribe(@NonNull final EventReceiver receiver) {
+        log("unSubscribe:" + receiver);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mService.unSubscribe(Preconditions.checkNotNull(receiver));
+            }
+        });
+    }
+
+    public void unSubscribe(@NonNull final Object object) {
+        log("unSubscribe:" + object);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mWirer.unWire(object);
+            }
+        });
+    }
+
     private void log(Object message) {
-        if (mDebuggable) Log.d(LOG_TAG, String.valueOf(message));
+        if (mConfig.debuggable) Log.d(LOG_TAG, String.valueOf(message));
+    }
+
+    public IBinder generateStub() {
+        return new IEventBus.Stub() {
+
+            @Override
+            public void publish(Event event) throws RemoteException {
+                EventBus.this.publish(event);
+            }
+
+            @Override
+            public void publishEmptyEvent(int event) throws RemoteException {
+                EventBus.this.publishEmptyEvent(event);
+            }
+
+            @Override
+            public void subscribe(IEventReceiver receiver) throws RemoteException {
+                EventBus.this.subscribe(receiver);
+            }
+
+            @Override
+            public void unSubscribe(IEventReceiver receiver) throws RemoteException {
+                EventBus.this.unSubscribe(receiver);
+            }
+        };
+    }
+
+    public static class Config {
+        private boolean debuggable;
+
+        public void setDebuggable(boolean debuggable) {
+            this.debuggable = debuggable;
+        }
     }
 }

@@ -51,6 +51,12 @@ public class MyService extends Service {
         customReceiver();
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getInstance().unSubscribe(this);
+    }
+
     @Events(Constants.EVENT_FAB_CLICKED)
     public void handleFabClick() {
         log("handleFabClick");
@@ -62,9 +68,10 @@ public class MyService extends Service {
     }
 
     @ReceiverMethod
-    @Events({Constants.EVENT_FAB_CLICKED, Constants.EVENT_ACTIVITY_FINISHED})
+    @Events({Constants.EVENT_ACTIVITY_FINISHED})
     public void customName() {
         log("customName");
+        stopSelf();
     }
 
     @ReceiverMethod
