@@ -11,11 +11,15 @@ Simple event bus for Android
 Config
 ``` java
 public class MyApp extends Application {
-
+    
     @Override
     public void onCreate() {
         super.onCreate();
-        EventBus.create(this, true);
+        Scalpel.create(this).config(Configuration.builder()
+                .debug(true)
+                .logTag("EventBus")
+                .build());
+        EventBus.create(this).setDebuggable(true);
     }
 }
 ```
