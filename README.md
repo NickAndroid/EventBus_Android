@@ -6,6 +6,22 @@ Simple event bus for Android
 ### Latest version
 [ ![Download](https://api.bintray.com/packages/nickandroid/maven/eventbus/images/download.svg) ](https://bintray.com/nickandroid/maven/eventbus/_latestVersion)
 
+### Usage
+mvn:
+```
+<dependency>
+  <groupId>dev.nick</groupId>
+  <artifactId>eventbus</artifactId>
+  <version>0.2</version>
+  <type>pom</type>
+</dependency>
+```
+
+gradle
+```
+compile 'dev.nick:eventbus:0.2'
+```
+
 ### Samples
 
 Config
