@@ -31,10 +31,6 @@ public class MyApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Scalpel.create(this).config(Configuration.builder()
-                .debug(true)
-                .logTag("EventBus")
-                .build());
         EventBus.create(this).setDebuggable(true);
     }
 }
