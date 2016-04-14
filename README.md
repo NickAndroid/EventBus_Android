@@ -40,7 +40,7 @@ Activity
 ``` java
 public class MainActivity extends AppCompatActivity {
 
-    @Override
+     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EventBus.getInstance().publishEmpty(Constants.EVENT_FAB_CLICKED);
+                EventBus.getInstance().publishEmptyEvent(Constants.EVENT_FAB_CLICKED);
             }
         });
 
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventBus.getInstance().publishEmpty(Constants.EVENT_ACTIVITY_FINISHED);
+        EventBus.getInstance().publishEmptyEvent(Constants.EVENT_ACTIVITY_FINISHED);
     }
 
     @CallInMainThread
